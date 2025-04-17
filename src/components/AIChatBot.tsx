@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageCircle, Send, X } from 'lucide-react';
+import { MessageCircle, Send, X, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 
@@ -13,41 +13,28 @@ interface Message {
   content: string;
 }
 
-type ResizeDirection =
-  | 'top'
-  | 'right'
-  | 'bottom'
-  | 'left'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
-
 export function AIChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Modal state
   const modalRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 100, y: 100 });
   const [size, setSize] = useState({ width: 480, height: 600 });
-
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isResizing, setIsResizing] = useState(false);
 
-  const [resizeDir, setResizeDir] = useState<ResizeDirection | null>(null);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [startSize, setStartSize] = useState({ width: 0, height: 0 });
-  const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
-
-  // Auto-scroll
+  // Auto-scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Escape key
+  // Handle escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
@@ -56,64 +43,46 @@ export function AIChatBot() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Drag logic
+  // Dragging logic
   const startDrag = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.chat-scroll')) return;
-
     setIsDragging(true);
-    setDragOffset({ x: e.clientX - position.x, y: e.clientY - position.y });
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
   };
 
   const onDrag = (e: MouseEvent) => {
     if (!isDragging) return;
-    setPosition({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
+    setPosition({
+      x: e.clientX - dragOffset.x,
+      y: e.clientY - dragOffset.y
+    });
   };
 
   const stopDrag = () => setIsDragging(false);
 
-  // Resize logic
-  const startResize = (dir: ResizeDirection) => (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setResizeDir(dir);
-    setStartPos({ x: e.clientX, y: e.clientY });
-    setStartSize(size);
-    setStartCoords(position);
-  };
+  // Resizing logic
+  const startResize = () => setIsResizing(true);
 
   const onResize = (e: MouseEvent) => {
-    if (!resizeDir) return;
-
-    const dx = e.clientX - startPos.x;
-    const dy = e.clientY - startPos.y;
-
-    let newWidth = startSize.width;
-    let newHeight = startSize.height;
-    let newX = startCoords.x;
-    let newY = startCoords.y;
-
-    if (resizeDir.includes('right')) newWidth = Math.max(320, startSize.width + dx);
-    if (resizeDir.includes('left')) {
-      newWidth = Math.max(320, startSize.width - dx);
-      newX = startCoords.x + dx;
-    }
-    if (resizeDir.includes('bottom')) newHeight = Math.max(300, startSize.height + dy);
-    if (resizeDir.includes('top')) {
-      newHeight = Math.max(300, startSize.height - dy);
-      newY = startCoords.y + dy;
-    }
-
-    setSize({ width: newWidth, height: newHeight });
-    setPosition({ x: newX, y: newY });
+    if (!isResizing) return;
+    const newWidth = e.clientX - position.x;
+    const newHeight = e.clientY - position.y;
+    setSize({
+      width: Math.max(320, newWidth),
+      height: Math.max(300, newHeight)
+    });
   };
 
-  const stopResize = () => setResizeDir(null);
+  const stopResize = () => setIsResizing(false);
 
   useEffect(() => {
     window.addEventListener('mousemove', onDrag);
     window.addEventListener('mouseup', stopDrag);
     window.addEventListener('mousemove', onResize);
     window.addEventListener('mouseup', stopResize);
+
     return () => {
       window.removeEventListener('mousemove', onDrag);
       window.removeEventListener('mouseup', stopDrag);
@@ -122,7 +91,6 @@ export function AIChatBot() {
     };
   });
 
-  // Outside click
   const handleClickOutside = (e: MouseEvent) => {
     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
       setOpen(false);
@@ -158,6 +126,7 @@ export function AIChatBot() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let botContent = '';
+
       const botMessage = { role: 'assistant' as const, content: '' };
       setMessages((prev) => [...prev, botMessage]);
 
@@ -181,16 +150,80 @@ export function AIChatBot() {
     }
   };
 
-  const resizeHandles = [
-    { dir: 'top-left', className: 'top-0 left-0 cursor-nwse-resize' },
-    { dir: 'top-right', className: 'top-0 right-0 cursor-nesw-resize' },
-    { dir: 'bottom-left', className: 'bottom-0 left-0 cursor-nesw-resize' },
-    { dir: 'bottom-right', className: 'bottom-0 right-0 cursor-nwse-resize' },
-    { dir: 'top', className: 'top-0 left-1/2 -translate-x-1/2 cursor-ns-resize' },
-    { dir: 'bottom', className: 'bottom-0 left-1/2 -translate-x-1/2 cursor-ns-resize' },
-    { dir: 'left', className: 'left-0 top-1/2 -translate-y-1/2 cursor-ew-resize' },
-    { dir: 'right', className: 'right-0 top-1/2 -translate-y-1/2 cursor-ew-resize' },
-  ];
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+  
+    try {
+      const response = await fetch('http://localhost:8000/detect', {
+        method: 'POST',
+        body: formData,
+      });
+  
+      const data = await response.json();
+      const ingredients = data?.ingredients || [];
+      const ingredientList = ingredients.join(', ') || 'No ingredients found.';
+  
+      // Step 1: Add detection message
+      const imageUploadMsg: Message[] = [
+        { role: 'user', content: 'Uploaded an image.' },
+        {
+          role: 'assistant',
+          content: `I have detected the ingredients: **${ingredientList}**`,
+        },
+      ];
+      
+  
+      setMessages((prev) => [...prev, ...imageUploadMsg]);
+  
+      // Step 2: Add a follow-up user message that asks for recipes
+      const followUpUserMsg = {
+        role: 'user' as const,
+        content: `What can I cook with the following ingredients(s)? \n ${ingredientList}`,
+      };
+  
+      setMessages((prev) => [...prev, followUpUserMsg]);
+      setIsLoading(true);
+  
+      // Step 3: Send full chat context including follow-up to the /api/chat endpoint
+      const chatResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, ...imageUploadMsg, followUpUserMsg],
+        }),
+      });
+  
+      if (!chatResponse.body) throw new Error('No response body from AI');
+  
+      // Step 4: Stream the assistant's response
+      const reader = chatResponse.body.getReader();
+      const decoder = new TextDecoder();
+      let botContent = '';
+  
+      const botMessage = { role: 'assistant' as const, content: '' };
+      setMessages((prev) => [...prev, botMessage]);
+  
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+  
+        const chunk = decoder.decode(value);
+        botContent += chunk;
+  
+        setMessages((prev) =>
+          prev.map((msg, i) =>
+            i === prev.length - 1 ? { ...msg, content: botContent } : msg
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Image upload or AI chat failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
 
   return (
     <>
@@ -207,26 +240,20 @@ export function AIChatBot() {
         <div
           ref={modalRef}
           className="fixed z-50 bg-white border shadow-xl rounded-xl overflow-hidden flex flex-col"
-          style={{
-            width: size.width,
-            height: size.height,
-            top: position.y,
-            left: position.x,
-          }}
-          onMouseDown={startDrag}
+          style={{ width: size.width, height: size.height, top: position.y, left: position.x }}
         >
-          <div className="flex justify-between items-center px-4 py-2 bg-gray-100 border-b">
+          <div
+            className="flex justify-between items-center px-4 py-2 cursor-move bg-gray-100 border-b"
+            onMouseDown={startDrag}
+          >
             <span className="font-semibold text-gray-800">AI Recipe Assistant</span>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-gray-600 hover:text-black transition"
-            >
+            <button onClick={() => setOpen(false)} className="text-gray-600 hover:text-black transition">
               <X className="w-4 h-4" />
             </button>
           </div>
 
           <div className="flex-1 p-4 flex flex-col overflow-hidden">
-            <ScrollArea className="flex-1 pr-2 chat-scroll">
+            <ScrollArea className="flex-1 pr-2">
               <div className="flex flex-col space-y-4">
                 {messages.map((message, index) => (
                   <div
@@ -261,20 +288,36 @@ export function AIChatBot() {
                 onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSend()}
                 disabled={isLoading}
               />
+              <input
+  ref={fileInputRef}
+  type="file"
+  accept="image/*"
+  className="hidden"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  }}
+/>
+
+              <Button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                size="icon"
+                disabled={isLoading}
+              >
+                <Image className="w-4 h-4" />
+              </Button>
               <Button onClick={handleSend} size="icon" disabled={isLoading}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
 
-          {resizeHandles.map((handle) => (
-            <div
-              key={handle.dir}
-              onMouseDown={startResize(handle.dir as ResizeDirection)}
-              className={`absolute w-3 h-3 bg-transparent z-50 ${handle.className}`}
-              style={{ zIndex: 60 }}
-            />
-          ))}
+          <div
+            onMouseDown={startResize}
+            className="absolute right-0 bottom-0 w-4 h-4 cursor-se-resize bg-transparent"
+          />
         </div>
       )}
     </>

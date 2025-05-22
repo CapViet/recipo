@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/home/hero-section";
+import News from '@/components/home/News';
 import {
   PopularCuisines,
   PopularCuisinesSkeleton,
@@ -44,6 +45,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <HeroSection />
+      <News />
       <div className="px-4 md:px-16">
         <Suspense fallback={<PopularCuisinesSkeleton />}>
           <PopularCuisinesSection />

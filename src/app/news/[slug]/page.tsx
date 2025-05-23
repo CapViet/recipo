@@ -1,15 +1,21 @@
+// File: src/app/news/[slug]/page.tsx
 import { newsArticles } from '@/data/news-article';
 import { notFound } from 'next/navigation';
 import fs from 'fs/promises';
 import path from 'path';
 
-export async function generateStaticParams() {
-  return newsArticles.map((article) => ({
-    slug: article.slug,
-  }));
+type PageProps = {
+  params: { slug: string }
+  searchParams?: Record<string, string | string[] | undefined>
 }
 
-export default async function NewsArticlePage({ params }: { params: { slug: string } }) {
+
+export async function generateStaticParams() {
+  return newsArticles.map(article => ({ slug: article.slug }));
+}
+
+
+export default async function NewsArticlePage({ params }: PageProps) {
   const article = newsArticles.find((a) => a.slug === params.slug);
   if (!article) return notFound();
 

@@ -52,5 +52,14 @@ export const newsArticles = [
     category: "BAKING",
     time: "10 hours ago",
     htmlPath: "/articles/very-best-chocolate-cake.html",
+  },
+  {
+    slug: "caesar-salad",
+    title: "Classic Caesar Salad with Homemade Dressing",
+    image: "https://cdn.loveandlemons.com/wp-content/uploads/2024/12/caesar-salad.jpg",
+    excerpt: "A fresh and zesty salad with a creamy dressing and crunchy croutons.",
+    category: "SALADS",
+    time: "1 year ago",
+    htmlPath: "/articles/caesar-salad.html",
   }
 ];

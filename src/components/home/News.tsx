@@ -22,7 +22,7 @@ export default function News() {
 
         {/* Sidebar articles */}
         <div className="flex flex-col gap-6">
-          {otherArticles.slice(0, 5).map((article) => (
+          {otherArticles.slice(0, 6).map((article) => (
             <Link key={article.slug} href={`/news/${article.slug}`} className="flex gap-4">
               <img src={article.image} alt={article.title} className="w-24 h-20 object-cover rounded" />
               <div>

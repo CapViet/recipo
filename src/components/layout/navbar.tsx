@@ -22,6 +22,7 @@ export function Navbar({
   const baseRoutes = [
     { href: "/", label: "Home" },
     { href: "/recipes", label: "Recipes" },
+    { href: "/news", label: "News" },
   ];
 
   // Add favorites route only if user is logged in

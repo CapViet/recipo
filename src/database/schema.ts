@@ -7,10 +7,11 @@ import {
   json,
   pgEnum,
   serial,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-  id: text("id").primaryKey(),
+  id: uuid("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
@@ -76,26 +77,29 @@ export const country = pgTable("country", {
   recipe_count: integer("recipe_count").notNull().default(0),
 });
 
-export const recipe = pgTable("recipe", {
-  id: text("id").primaryKey(),
-  title: text("title").notNull(),
-  slug: text("slug").notNull().unique(),
-  description: text("description").notNull(),
-  image: text("image"),
-  time: text("time").notNull(),
-  difficulty: difficultyEnum("difficulty").notNull(),
-  countryId: text("country_id")
-    .notNull()
-    .references(() => country.id, { onDelete: "cascade" }),
-  servings: integer("servings").notNull(),
-  calories: integer("calories"),
-  videoUrl: text("video_url"),
-  ingredients: json("ingredients").notNull(),
-  instructions: json("instructions").notNull(),
-  isFeatured: boolean("is_featured").default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+  export const recipe = pgTable("recipe", {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    slug: text("slug").notNull().unique(),
+    description: text("description").notNull(),
+    image: text("image"),
+    time: text("time").notNull(),
+    difficulty: difficultyEnum("difficulty").notNull(),
+    countryId: text("country_id")
+      .notNull()
+      .references(() => country.id, { onDelete: "cascade" }),
+    servings: integer("servings").notNull(),
+    calories: integer("calories"),
+    videoUrl: text("video_url"),
+    ingredients: json("ingredients").notNull(),
+    instructions: json("instructions").notNull(),
+    isFeatured: boolean("is_featured").default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    status: text("status"),
+    userId: text("user_id").references(() => user.id), // changed from uuid() to text()
+  });
+
 
 export const likes = pgTable("likes", {
   id: serial("id").primaryKey(),

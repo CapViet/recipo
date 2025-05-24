@@ -1,6 +1,6 @@
 import { db } from "./drizzle";
 import * as schema from "./schema";
-import { desc, eq, count, ilike } from "drizzle-orm";
+import { desc, eq, count, ilike, and } from "drizzle-orm";
 import { cache } from "react";
 import type {
   Country,
@@ -16,6 +16,36 @@ export const getPopularCuisines = cache(async (): Promise<Country[]> => {
     throw new Error("Failed to fetch popular cuisines");
   }
 });
+export async function getUserRecipes(userId: string) {
+  const recipes = await db
+    .select({
+      id: schema.recipe.id,
+      title: schema.recipe.title,
+      slug: schema.recipe.slug,
+      description: schema.recipe.description,
+      image: schema.recipe.image,
+      time: schema.recipe.time,
+      difficulty: schema.recipe.difficulty,
+      countryId: schema.recipe.countryId,
+      servings: schema.recipe.servings,
+      calories: schema.recipe.calories,
+      videoUrl: schema.recipe.videoUrl,
+      ingredients: schema.recipe.ingredients,
+      instructions: schema.recipe.instructions,
+      isFeatured: schema.recipe.isFeatured,
+      createdAt: schema.recipe.createdAt,
+      updatedAt: schema.recipe.updatedAt,
+      countryName: schema.country.name,
+      userId: schema.recipe.userId,
+      status: schema.recipe.status,
+    })
+    .from(schema.recipe)
+    .innerJoin(schema.country, eq(schema.recipe.countryId, schema.country.id))
+    .where(eq(schema.recipe.userId, userId))
+    .orderBy(desc(schema.recipe.createdAt));
+
+  return recipes;
+}
 
 export const getCountryById = cache(
   async (id: string): Promise<Country | null> => {
@@ -57,19 +87,23 @@ export const getAllRecipes = cache(
           createdAt: schema.recipe.createdAt,
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
+          userId: schema.recipe.userId,
+          status: schema.recipe.status,
         })
         .from(schema.recipe)
         .innerJoin(
           schema.country,
           eq(schema.recipe.countryId, schema.country.id)
         )
+        .where(
+          and(
+            eq(schema.recipe.status, "approved"),
+            ...(countrySlug ? [eq(schema.country.slug, countrySlug)] : [])
+          )
+        )
         .orderBy(desc(schema.recipe.createdAt))
         .limit(limit)
         .offset(offset);
-
-      if (countrySlug) {
-        query.where(eq(schema.country.slug, countrySlug));
-      }
 
       return query;
     } catch {
@@ -100,6 +134,8 @@ export const getFeaturedRecipes = cache(
           createdAt: schema.recipe.createdAt,
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
+          userId: schema.recipe.userId,
+          status: schema.recipe.status,
         })
         .from(schema.recipe)
         .innerJoin(
@@ -138,6 +174,8 @@ export const getRecipeBySlug = cache(
           createdAt: schema.recipe.createdAt,
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
+          userId: schema.recipe.userId,
+          status: schema.recipe.status,
         })
         .from(schema.recipe)
         .innerJoin(
@@ -178,6 +216,8 @@ export const getRecipesByCountry = cache(
           createdAt: schema.recipe.createdAt,
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
+          userId: schema.recipe.userId,
+          status: schema.recipe.status,
         })
         .from(schema.recipe)
         .innerJoin(
@@ -216,6 +256,8 @@ export const getRecipesBySearch = cache(
           createdAt: schema.recipe.createdAt,
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
+          userId: schema.recipe.userId,
+status: schema.recipe.status,
         })
         .from(schema.recipe)
         .innerJoin(
@@ -289,6 +331,8 @@ export const getFavoriteRecipes = cache(
           createdAt: schema.recipe.createdAt,
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
+          userId: schema.recipe.userId,
+status: schema.recipe.status,
         })
         .from(schema.recipe)
         .innerJoin(schema.likes, eq(schema.recipe.id, schema.likes.recipeId))

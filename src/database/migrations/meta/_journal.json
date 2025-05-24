@@ -43,6 +43,13 @@
       "when": 1742665641620,
       "tag": "0005_natural_zuras",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1748085590094,
+      "tag": "0006_brief_reaper",
+      "breakpoints": true
     }
   ]
 }

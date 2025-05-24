@@ -13,16 +13,17 @@ import { headers } from "next/headers";
 export async function createRecipe(input: RecipeInsert) {
   const validatedData = RecipeInsertSchema.parse(input);
 
-  // Generate a slug from the title
   const slug = slugify(validatedData.title);
-
   const id = uuidv4();
 
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
-  if (!session?.session && session?.user?.role !== "admin") {
+  const user = session?.user;
+  const isAdmin = user?.role === "admin";
+
+  if (!session?.session || !user) {
     throw new Error("Unauthorized");
   }
 
@@ -43,8 +44,10 @@ export async function createRecipe(input: RecipeInsert) {
     ingredients: validatedData.ingredients,
     instructions: validatedData.instructions,
     isFeatured: validatedData.isFeatured,
+    status: isAdmin ? null : "pending",  // <- Added this line
     createdAt: new Date(),
     updatedAt: new Date(),
+    userId: session.user.id,
   });
 
   revalidatePath("/admin/recipes");
@@ -52,6 +55,7 @@ export async function createRecipe(input: RecipeInsert) {
 
   return { success: true, id };
 }
+
 
 export async function updateRecipe(input: RecipeInsert) {
   const validatedData = RecipeInsertSchema.parse(input);

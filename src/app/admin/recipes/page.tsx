@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import RecipeTable from "@/components/admin/recipe-table";
+import AdminRecipeTableWithSearch from "@/components/admin/AdminRecipeTableWithSearch";
 import { getAllRecipes } from "@/database/queries";
 import { Suspense } from "react";
 import BackButton from "@/components/recipes/back-button";
 import { CircularProgress } from "@/components/ui/circular-progress";
 
 async function RecipeTableSection() {
+  // Fetch all recipes, or keep a limit if you want (e.g., 100)
   const recipes = await getAllRecipes({ limit: 100 });
-  return RecipeTable({ recipes });
+  return <AdminRecipeTableWithSearch initialRecipes={recipes} />;
 }
 
 export default async function RecipesPage() {

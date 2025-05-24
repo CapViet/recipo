@@ -14,7 +14,8 @@ export default function AdminDashboard() {
     <div className="container py-10 px-16">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Existing cards */}
         <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Recipes</CardTitle>
@@ -32,6 +33,26 @@ export default function AdminDashboard() {
           </CardFooter>
         </Card>
 
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle>Pending Recipes</CardTitle>
+            <CardDescription>Review recipes pending approval</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              View and approve or reject submitted recipes
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Link href="/admin/recipes/pending" className="w-full">
+              <Button className="w-full">
+                Review Pending
+              </Button>
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Existing cards */}
         <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle>Countries</CardTitle>

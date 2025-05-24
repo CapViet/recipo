@@ -1,6 +1,6 @@
 import { db } from "./drizzle";
 import * as schema from "./schema";
-import { desc, eq, count, ilike, and } from "drizzle-orm";
+import { desc, eq, count, ilike, and, not, or } from "drizzle-orm";
 import { cache } from "react";
 import type {
   Country,
@@ -96,11 +96,15 @@ export const getAllRecipes = cache(
           eq(schema.recipe.countryId, schema.country.id)
         )
         .where(
-          and(
-            eq(schema.recipe.status, "approved"),
-            ...(countrySlug ? [eq(schema.country.slug, countrySlug)] : [])
-          )
-        )
+  and(
+    or(
+      eq(schema.recipe.status, "approved"),
+      eq(schema.recipe.status, "pending")
+    ),
+    ...(countrySlug ? [eq(schema.country.slug, countrySlug)] : []),
+    not(eq(schema.recipe.status, "rejected")) // optional but redundant here due to or clause
+  )
+)
         .orderBy(desc(schema.recipe.createdAt))
         .limit(limit)
         .offset(offset);
@@ -233,7 +237,45 @@ export const getRecipesByCountry = cache(
     }
   }
 );
+export const getPendingRecipes = cache(
+  async (): Promise<RecipeWithCountry[]> => {
+    try {
+      const recipes = await db
+        .select({
+          id: schema.recipe.id,
+          title: schema.recipe.title,
+          slug: schema.recipe.slug,
+          description: schema.recipe.description,
+          image: schema.recipe.image,
+          time: schema.recipe.time,
+          difficulty: schema.recipe.difficulty,
+          countryId: schema.recipe.countryId,
+          servings: schema.recipe.servings,
+          calories: schema.recipe.calories,
+          videoUrl: schema.recipe.videoUrl,
+          ingredients: schema.recipe.ingredients,
+          instructions: schema.recipe.instructions,
+          isFeatured: schema.recipe.isFeatured,
+          createdAt: schema.recipe.createdAt,
+          updatedAt: schema.recipe.updatedAt,
+          countryName: schema.country.name,
+          userId: schema.recipe.userId,
+          status: schema.recipe.status,
+        })
+        .from(schema.recipe)
+        .innerJoin(
+          schema.country,
+          eq(schema.recipe.countryId, schema.country.id)
+        )
+        .where(eq(schema.recipe.status, "pending"))
+        .orderBy(desc(schema.recipe.createdAt));
 
+      return recipes;
+    } catch {
+      throw new Error("Failed to fetch pending recipes");
+    }
+  }
+);
 export const getRecipesBySearch = cache(
   async (search: string): Promise<RecipeWithCountry[]> => {
     try {
@@ -257,14 +299,16 @@ export const getRecipesBySearch = cache(
           updatedAt: schema.recipe.updatedAt,
           countryName: schema.country.name,
           userId: schema.recipe.userId,
-status: schema.recipe.status,
+          status: schema.recipe.status,
         })
         .from(schema.recipe)
-        .innerJoin(
-          schema.country,
-          eq(schema.recipe.countryId, schema.country.id)
-        )
-        .where(ilike(schema.recipe.title, `%${search}%`));
+        .innerJoin(schema.country, eq(schema.recipe.countryId, schema.country.id))
+        .where(
+          and(
+            ilike(schema.recipe.title, `%${search}%`),
+            eq(schema.recipe.status, "approved")  // <-- add this filter here
+          )
+        );
 
       return recipes;
     } catch {
@@ -373,3 +417,17 @@ export const getReviewsByRecipeId = cache(
     }
   }
 );
+export async function updateRecipeStatus(
+  recipeId: string,
+  newStatus: "pending" | "approved" | "rejected"
+): Promise<void> {
+  try {
+    await db
+      .update(schema.recipe)
+      .set({ status: newStatus })
+      .where(eq(schema.recipe.id, recipeId));
+  } catch (error) {
+    console.error("Failed to update recipe status:", error);
+    throw new Error("Failed to update recipe status");
+  }
+}

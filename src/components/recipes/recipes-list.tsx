@@ -18,11 +18,13 @@ import { useRecipeFiltering } from "@/hooks/use-recipe-filter";
 interface RecipesListProps {
   initialRecipes: RecipeWithCountry[];
   isFavoritePage?: boolean;
+  showStatus?: boolean;
 }
 
 export default function RecipesList({
   initialRecipes,
   isFavoritePage,
+  showStatus = false,
 }: RecipesListProps) {
   const {
     search,
@@ -123,11 +125,26 @@ export default function RecipesList({
           {/* Recipe grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRecipes.map((recipe) => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                isLiked={isFavoritePage ?? false}
-              />
+              <div key={recipe.id} className="relative">
+                <RecipeCard
+                  recipe={recipe}
+                  isLiked={isFavoritePage ?? false}
+                />
+                {showStatus && recipe.status && (
+                  <span
+                    className={`absolute bottom-10 right-4 px-2 py-1 text-xs rounded-md font-medium z-10
+                      ${
+                        recipe.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : recipe.status === "pending"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                  >
+                    {recipe.status.charAt(0).toUpperCase() + recipe.status.slice(1)}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         </>

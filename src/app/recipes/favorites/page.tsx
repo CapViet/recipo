@@ -24,7 +24,8 @@ async function UserRecipesSection({ userId }: { userId: string }) {
     return <div className="text-center text-gray-500">You haven&apos;t submitted any recipes yet.</div>;
   }
 
-  return <RecipeList initialRecipes={recipes} isFavoritePage={false} />;
+  // ✅ Pass showStatus={true} here
+  return <RecipeList initialRecipes={recipes} showStatus={true} />;
 }
 
 export default async function Favorites() {

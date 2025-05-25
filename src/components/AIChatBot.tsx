@@ -153,44 +153,40 @@ export function AIChatBot() {
   const handleImageUpload = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-  
+
     try {
       const response = await fetch('http://localhost:8000/detect', {
         method: 'POST',
         body: formData,
       });
-  
+
       const data = await response.json();
       const ingredients = data?.ingredients || [];
       const ingredientList = ingredients.join(', ') || 'No ingredients found.';
-  
-      // Step 1: Add detection message
-      const imageUrl = URL.createObjectURL(file); // Create local URL for the image
 
-const imageUploadMsg: Message[] = [
-  {
-    role: 'user',
-    content: `![Uploaded image](${imageUrl})`, // Markdown image
-  },
-  {
-    role: 'assistant',
-    content: `I have detected the ingredients: **${ingredientList}**`,
-  },
-];
+      // Step 1: Add detection message without displaying the image
+      const imageUploadMsg: Message[] = [
+        {
+          role: 'user',
+          content: `Uploaded an image for analysis.`, // 👈 No image markdown here
+        },
+        {
+          role: 'assistant',
+          content: `I have detected the ingredients: **${ingredientList}**`,
+        },
+      ];
 
-      
-  
       setMessages((prev) => [...prev, ...imageUploadMsg]);
-  
+
       // Step 2: Add a follow-up user message that asks for recipes
       const followUpUserMsg = {
         role: 'user' as const,
         content: `What can I cook with the following ingredients(s)? \n ${ingredientList}`,
       };
-  
+
       setMessages((prev) => [...prev, followUpUserMsg]);
       setIsLoading(true);
-  
+
       // Step 3: Send full chat context including follow-up to the /api/chat endpoint
       const chatResponse = await fetch('/api/chat', {
         method: 'POST',
@@ -199,24 +195,24 @@ const imageUploadMsg: Message[] = [
           messages: [...messages, ...imageUploadMsg, followUpUserMsg],
         }),
       });
-  
+
       if (!chatResponse.body) throw new Error('No response body from AI');
-  
+
       // Step 4: Stream the assistant's response
       const reader = chatResponse.body.getReader();
       const decoder = new TextDecoder();
       let botContent = '';
-  
+
       const botMessage = { role: 'assistant' as const, content: '' };
       setMessages((prev) => [...prev, botMessage]);
-  
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-  
+
         const chunk = decoder.decode(value);
         botContent += chunk;
-  
+
         setMessages((prev) =>
           prev.map((msg, i) =>
             i === prev.length - 1 ? { ...msg, content: botContent } : msg
@@ -229,6 +225,7 @@ const imageUploadMsg: Message[] = [
       setIsLoading(false);
     }
   };
+
   
 
   return (

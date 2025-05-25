@@ -165,13 +165,19 @@ export function AIChatBot() {
       const ingredientList = ingredients.join(', ') || 'No ingredients found.';
   
       // Step 1: Add detection message
-      const imageUploadMsg: Message[] = [
-        { role: 'user', content: 'Uploaded an image.' },
-        {
-          role: 'assistant',
-          content: `I have detected the ingredients: **${ingredientList}**`,
-        },
-      ];
+      const imageUrl = URL.createObjectURL(file); // Create local URL for the image
+
+const imageUploadMsg: Message[] = [
+  {
+    role: 'user',
+    content: `![Uploaded image](${imageUrl})`, // Markdown image
+  },
+  {
+    role: 'assistant',
+    content: `I have detected the ingredients: **${ingredientList}**`,
+  },
+];
+
       
   
       setMessages((prev) => [...prev, ...imageUploadMsg]);

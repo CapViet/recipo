@@ -1,6 +1,6 @@
 import { db } from "./drizzle";
 import * as schema from "./schema";
-import { desc, eq, count, ilike, and, not, or } from "drizzle-orm";
+import { desc, eq, count, ilike, and } from "drizzle-orm";
 import { cache } from "react";
 import type {
   Country,
@@ -96,15 +96,11 @@ export const getAllRecipes = cache(
           eq(schema.recipe.countryId, schema.country.id)
         )
         .where(
-  and(
-    or(
-      eq(schema.recipe.status, "approved"),
-      eq(schema.recipe.status, "pending")
-    ),
-    ...(countrySlug ? [eq(schema.country.slug, countrySlug)] : []),
-    not(eq(schema.recipe.status, "rejected")) // optional but redundant here due to or clause
-  )
-)
+          and(
+            eq(schema.recipe.status, "approved"), // Only fetch approved recipes
+            ...(countrySlug ? [eq(schema.country.slug, countrySlug)] : [])
+          )
+        )
         .orderBy(desc(schema.recipe.createdAt))
         .limit(limit)
         .offset(offset);
@@ -317,26 +313,28 @@ export const getRecipesBySearch = cache(
   }
 );
 
-export const getRecipesCount = async (
-  countrySlug?: string
-): Promise<number> => {
+export const getRecipesCount = cache(async (countrySlug?: string) => {
   try {
-    const query = db.select({ count: count() }).from(schema.recipe);
-
-    if (countrySlug) {
-      query
-        .innerJoin(
-          schema.country,
-          eq(schema.recipe.countryId, schema.country.id)
+    const result = await db
+      .select({ count: count() })
+      .from(schema.recipe)
+      .innerJoin(
+        schema.country,
+        eq(schema.recipe.countryId, schema.country.id)
+      )
+      .where(
+        and(
+          eq(schema.recipe.status, "approved"),
+          ...(countrySlug ? [eq(schema.country.slug, countrySlug)] : [])
         )
-        .where(eq(schema.country.slug, countrySlug));
-    }
-    const result = await query;
-    return result[0].count || 0;
+      );
+
+    return result[0]?.count ?? 0;
   } catch {
-    throw new Error("Failed to fetch recipes count");
+    throw new Error("Failed to count recipes");
   }
-};
+});
+
 
 export const getUserLikedRecipes = cache(
   async (userId: string): Promise<string[] | null> => {

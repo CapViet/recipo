@@ -1,62 +1,88 @@
-# recipo
-To deploy on vercel
-
-
-# how does the chat bot works?: 
-the backend will be placed in the src/app/api/chat/route.ts file. This is how it works:
-
-# 1️⃣ **Astra DB API**
-
-**What it is:**
-Astra DB is your **vector database**, where you store recipe documents.
-
-**What the code does with it:**
-
-* Connects to Astra DB
-* Searches for documents that are similar to the user’s message
-* Returns the top matches
+Here’s a concise GitHub-style README 👇
 
 ---
 
-# 2️⃣ **Ollama Embedding API**
+# 🍳 AI Cooking Assistant — RAG Chatbot Recipe Website
 
-**What it is:**
-This is Ollama’s endpoint that creates **embeddings** (vectors).
-
-**What the code does with it:**
-
-* Sends the user’s message to Ollama
-* Ollama turns the text into a vector (embedding)
-* You use that vector to search in Astra DB
+An AI-powered cooking website that combines a modern recipe platform with a **Retrieval-Augmented Generation (RAG) chatbot**.
+Users can discover recipes, get cooking help, and read AI-generated food articles — all through natural conversation.
 
 ---
 
-# 3️⃣ **Ollama LLM Generation API**
+## ✨ Features
 
-**What it is:**
-Ollama’s endpoint that generates text responses using an LLM (LLaMA2).
+### 🤖 AI Cooking Chatbot (Core Feature)
 
-**What the code does with it:**
+The built-in chatbot acts as a personal cooking assistant that can:
 
-* Sends a prompt that includes:
+* Recommend recipes using natural language
+* Suggest meals from available ingredients
+* Provide step-by-step cooking guidance
+* Answer food and cooking questions in real time
 
-  * The retrieved documents
-  * The conversation history
-  * The user’s question
-* Ollama streams back an answer, little by little
+Powered by a **RAG pipeline**, the chatbot retrieves real recipes from the database before generating responses → making answers accurate and grounded.
 
 ---
 
-# 4️⃣ **Next.js Route Handler API**
+### 🥗 Recipe Platform
 
-**What it is:**
-This is the server endpoint (`POST`) that receives the request from your frontend.
+* Browse and search recipes
+* Filter by country or difficulty
+* Save favorite recipes
+* Comment and rate dishes
+* Create and submit your own recipes
 
-**What the code does:**
+---
 
-* Reads the chat messages
-* Calls Ollama Embedding API
-* Calls Astra DB to retrieve documents
-* Builds a prompt
-* Calls Ollama LLM to generate a response
-* Streams the reply back to the user
+### 📰 AI Food Article Generator
+
+A second LLM automatically generates food blog posts and cooking articles to enrich the website content.
+
+---
+
+## 🧠 AI Stack
+
+| Component         | Model                   | Purpose                          |
+| ----------------- | ----------------------- | -------------------------------- |
+| Chatbot           | LLaMA 2 – 7B            | Conversational cooking assistant |
+| Article Generator | LLaMA 3.2 – 3B Instruct | Food article generation          |
+
+---
+
+## 🔄 RAG Workflow
+
+1. User asks a question
+2. System retrieves relevant recipes from DB
+3. Context is injected into prompt
+4. LLM generates grounded answer
+
+This prevents hallucinations and ensures responses match real recipes.
+
+---
+
+## 🏗️ Tech Stack
+
+**Frontend**
+
+* Next.js
+* TailwindCSS
+
+**Backend**
+
+* FastAPI
+
+**Database**
+
+* PostgreSQL
+
+**AI**
+
+* LLaMA models via Ollama
+* RAG architecture
+
+---
+
+## 🎯 Goal
+
+Transform a traditional recipe website into an **interactive AI cooking companion** that helps users cook smarter and discover meals faster.
+

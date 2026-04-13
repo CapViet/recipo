@@ -1,7 +1,3 @@
-Here’s a concise GitHub-style README 👇
-
----
-
 # 🍳 AI Cooking Assistant — RAG Chatbot Recipe Website
 
 An AI-powered cooking website that combines a modern recipe platform with a **Retrieval-Augmented Generation (RAG) chatbot**.

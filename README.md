@@ -16,10 +16,6 @@ Astra DB is your **vector database**, where you store recipe documents.
 * Searches for documents that are similar to the user’s message
 * Returns the top matches
 
-**Why:**
-So your chatbot can read relevant recipe info and include it in the answer.
-This is the “retrieval” part of RAG.
-
 ---
 
 # 2️⃣ **Ollama Embedding API**
@@ -32,9 +28,6 @@ This is Ollama’s endpoint that creates **embeddings** (vectors).
 * Sends the user’s message to Ollama
 * Ollama turns the text into a vector (embedding)
 * You use that vector to search in Astra DB
-
-**Why:**
-To find the documents that are most relevant to the question.
 
 ---
 
@@ -51,9 +44,6 @@ Ollama’s endpoint that generates text responses using an LLM (LLaMA2).
   * The conversation history
   * The user’s question
 * Ollama streams back an answer, little by little
-
-**Why:**
-This produces the final chatbot answer.
 
 ---
 
